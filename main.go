@@ -10,6 +10,24 @@ import (
 	"time"
 )
 
+func main() {
+	state := NewState("data", "csv")
+	fmt.Println(state)
+	state.LoadEntries("test")
+	fmt.Println(state)
+
+	// e1 := Entry{
+	// 	Company: "emp",
+	// 	Role: "dev",
+	// 	Status: "paz",
+	// 	Platform: "web",
+	// 	ApplyDate: time.Now(),
+	// 	ContactReplied: false,
+	// }
+	//
+	// SaveEntries("test", []Entry{e1})
+}
+
 type Entry struct {
 	Company        string
 	Role       	   string
@@ -19,49 +37,65 @@ type Entry struct {
 	ContactReplied bool
 }
 
-func LoadEntries(filename string) ([]Entry, error) {
-	f, err := os.Open(filepath.Join("data", filename + ".csv"))
-	if err != nil {
-		return nil, err
+type State struct {
+	Entries    []Entry
+	DataDir    string
+	DataFormat string
+}
+
+func NewState(dataDir, dataFormat string) *State {
+	return & State{
+		Entries: []Entry{},
+		DataDir: dataDir,
+		DataFormat: fmt.Sprintf(".%s", dataFormat),
 	}
-	defer f.Close()
+}
+
+// This method reads the content of a CSV file in the Entry format and saves it to the state
+func (s *State) LoadEntries(filename string) error {
+	filePath := filepath.Join(s.DataDir, filename + s.DataFormat)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 	
-	reader := csv.NewReader(f)
+	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	entries := []Entry{}
 	
 	// Skip header row
 	for i := 1; i < len(records); i++ {
-		r := records[i]
+		record := records[i]
 		
-		log.Printf("reading record %d from file %s...\n", i, filename)
+		log.Printf("reading record %d from %s\n", i, filePath)
 		// Skip weird records
-		if len(r) != 6 {
-			log.Println("skipping weird row")
+		if len(record) != 6 {
+			log.Println("skipping weird row...")
 			continue
 		}
 		
-		applyDate, err := time.Parse(time.RFC3339Nano, r[4])
+		applyDate, err := time.Parse(time.RFC3339Nano, record[4])
 		if err != nil {
-			log.Println("time parsing error, skipping record")
+			log.Println("time parsing error, skipping record...")
 			continue
 		}
 
-		contactReplied, err := strconv.ParseBool(r[5])
+		contactReplied, err := strconv.ParseBool(record[5])
 		if err != nil {
-			log.Println("bool parsing error, skipping record")
+			log.Println("bool parsing error, skipping record...")
 			continue
 		}
 
 		entry := Entry{
-			Company: r[0],
-			Role: r[1],
-			Status: r[2],
-			Platform: r[3],
+			Company: record[0],
+			Role: record[1],
+			Status: record[2],
+			Platform: record[3],
 			ApplyDate: applyDate,
 			ContactReplied: contactReplied,
 		}
@@ -69,19 +103,23 @@ func LoadEntries(filename string) ([]Entry, error) {
 		log.Println("record appended")
 	}
 
-	return entries, nil
+	s.Entries = entries
+	log.Println("finished loading entries to state")
+	
+	return nil
 }
 
-// This method saves all the entries passed to it in a file with the filename specified.
-func SaveEntries(filename string, entries []Entry) error {
-	os.MkdirAll("data", 0755)
-	f, err := os.Create(filepath.Join("data", filename + ".csv"))
+// This method saves all the entries of the state into a CSV file with the filename specified.
+func (s *State) SaveEntries(filename string) error {
+	os.MkdirAll(s.DataDir, 0755)
+	filePath := filepath.Join(s.DataDir, filename + s.DataFormat)
+	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer file.Close()
 
-	writer := csv.NewWriter(f)
+	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
 	header := []string{"company", "position", "status", "platform", "apply_date", "contact_replied"}
@@ -89,7 +127,7 @@ func SaveEntries(filename string, entries []Entry) error {
 		return err
 	}
 
-	for _, e := range entries {
+	for _, e := range s.Entries {
 		record := []string{
 			e.Company,
 			e.Role,
@@ -106,16 +144,7 @@ func SaveEntries(filename string, entries []Entry) error {
 	return nil
 }
 
-func main() {
-	e1 := Entry{
-		Company: "emp",
-		Role: "dev",
-		Status: "paz",
-		Platform: "web",
-		ApplyDate: time.Now(),
-		ContactReplied: false,
-	}
-
-	SaveEntries("test", []Entry{e1})
-	fmt.Println(LoadEntries("test"))
+func (s *State) AddEntry(entry Entry) {
+	s.Entries = append(s.Entries, entry)
 }
+
