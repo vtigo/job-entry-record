@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -54,22 +53,18 @@ func (s *State) LoadEntries(filename string) error {
 	for i := 1; i < len(records); i++ {
 		record := records[i]
 		
-		log.Printf("reading record %d from %s\n", i, filePath)
 		// Skip weird records
 		if len(record) != 6 {
-			log.Println("skipping weird row...")
 			continue
 		}
 		
 		applyDate, err := time.Parse(time.RFC3339Nano, record[4])
 		if err != nil {
-			log.Println("time parsing error, skipping record...")
 			continue
 		}
 
 		contactReplied, err := strconv.ParseBool(record[5])
 		if err != nil {
-			log.Println("bool parsing error, skipping record...")
 			continue
 		}
 
@@ -82,11 +77,9 @@ func (s *State) LoadEntries(filename string) error {
 			ContactReplied: contactReplied,
 		}
 		entries = append(entries, entry)
-		log.Println("record appended")
 	}
 
 	s.Entries = entries
-	log.Println("finished loading entries to state")
 	
 	return nil
 }
@@ -122,7 +115,7 @@ func (s *State) SaveEntries(filename string) error {
 			return err
 		}
 	}
-
+	
 	return nil
 }
 
