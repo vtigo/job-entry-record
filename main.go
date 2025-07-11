@@ -13,8 +13,11 @@ import (
 func main() {
 	state := NewState("data", "csv")
 	fmt.Println(state)
-	state.LoadEntries("test")
-	fmt.Println(state)
+	err := state.LoadEntries("test")
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(state.String())
 
 	// e1 := Entry{
 	// 	Company: "emp",
@@ -49,6 +52,15 @@ func NewState(dataDir, dataFormat string) *State {
 		DataDir: dataDir,
 		DataFormat: fmt.Sprintf(".%s", dataFormat),
 	}
+}
+
+func (s *State) String() string {
+	return fmt.Sprintf(
+		"State\nEntries: %d\nDataDir: %s\nDataFormat: %s",
+		len(s.Entries),
+		s.DataDir,
+		s.DataFormat,
+	)
 }
 
 // This method reads the content of a CSV file in the Entry format and saves it to the state
