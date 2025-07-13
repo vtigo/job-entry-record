@@ -12,29 +12,27 @@ import (
 type State struct {
 	Entries    []Entry
 	DataDir    string
-	DataFormat string
 }
 
-func NewState(dataDir, dataFormat string) *State {
+func NewState(dataDir string) *State {
 	return & State{
 		Entries: []Entry{},
 		DataDir: dataDir,
-		DataFormat: fmt.Sprintf(".%s", dataFormat),
 	}
 }
 
+// Returns the state in a formated string
 func (s *State) String() string {
 	return fmt.Sprintf(
-		"State\nEntries: %d\nDataDir: %s\nDataFormat: %s",
+		"State\n-----\nEntries: %d\nDataDir: %s\n-----\n",
 		len(s.Entries),
 		s.DataDir,
-		s.DataFormat,
 	)
 }
 
 // This method reads the content of a CSV file in the Entry format and saves it to the state
 func (s *State) LoadEntries(filename string) error {
-	filePath := filepath.Join(s.DataDir, filename + s.DataFormat)
+	filePath := filepath.Join(s.DataDir, filename + ".csv")
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -87,7 +85,7 @@ func (s *State) LoadEntries(filename string) error {
 // This method saves all the entries of the state into a CSV file with the filename specified.
 func (s *State) SaveEntries(filename string) error {
 	os.MkdirAll(s.DataDir, 0755)
-	filePath := filepath.Join(s.DataDir, filename + s.DataFormat)
+	filePath := filepath.Join(s.DataDir, filename + ".csv")
 	file, err := os.Create(filePath)
 	if err != nil {
 		return err
