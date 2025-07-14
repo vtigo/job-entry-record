@@ -117,3 +117,20 @@ func (s *State) SaveEntries(filename string) error {
 	return nil
 }
 
+func (s *State) ListEntries() {
+	for i, e :=  range s.Entries {
+		y, m, d := e.ApplyDate.Date() 
+
+		var replied string
+		if e.ContactReplied == true {
+			replied = "Yes"
+		} else {
+			replied = "No"
+		}
+
+		fmt.Printf("%d. %s\n", i + 1, e.Company)
+		fmt.Printf("%d/%d/%d\n", d, m, y)
+		fmt.Printf("%s -> replied: %s\n", e.Status, replied)
+		fmt.Println("----------")
+	}
+}
