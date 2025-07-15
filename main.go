@@ -71,11 +71,13 @@ func (m model) View() string {
 }
 
 func main() {
-	state := NewState("data")
-	state.LoadEntries("test")
-	// state.ListEntries()
+	storage := NewCsvStorage("data", "test")
+	entries, err := storage.GetAll()
+	if err != nil {
+		log.Fatalf("Failed to get records from storage: %v", err)
+	}
 
-	model := model{entries: state.Entries, appState: appStateMenu }
+	model := model{entries: entries, appState: appStateMenu }
 	p := tea.NewProgram(model)
 	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
